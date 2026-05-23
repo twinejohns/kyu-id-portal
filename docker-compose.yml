@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: kyu_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: kyu_admin
+      POSTGRES_PASSWORD: kyu_secure_password_2026
+      POSTGRES_DB: kyu_id_registry
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kyu_admin -d kyu_id_registry"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kyu_web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://kyu_admin:kyu_secure_password_2026@postgres:5432/kyu_id_registry?schema=public"
+      NEXTAUTH_SECRET: "super_secret_jwt_key_kyu_2026_portal"
+      NODE_ENV: production
+      SMTP_HOST: "smtp.gmail.com"
+      SMTP_PORT: 587
+      SMTP_USER: ""
+      SMTP_PASS: ""
+      SMTP_FROM: "admin@kyu.ac.ug"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

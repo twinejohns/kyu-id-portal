@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      String   // SUPERADMIN, HR, PRINTER
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Department {
+  id           String             @id @default(uuid())
+  name         String             @unique
+  positions    Position[]
+  applications StaffApplication[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model Position {
+  id           String             @id @default(uuid())
+  title        String
+  department   Department         @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  departmentId String
+  applications StaffApplication[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model StaffApplication {
+  id                   String            @id @default(uuid())
+  fullName             String
+  email                String            // Used for notifications
+  phoneNumber          String?           // Staff phone number (optional)
+  position             Position          @relation(fields: [positionId], references: [id])
+  positionId           String
+  department           Department        @relation(fields: [departmentId], references: [id])
+  departmentId         String
+  applicationType      String            // NEW, REPLACEMENT
+  currentIdNumber      String?
+  replacementReason    String?           // LOST_DAMAGE, STOLEN, PROMOTION_DEPLOYMENT, NAME_CHANGE, WEAR_TEAR
+  employmentTerm       String            // PERMANENT, CONTRACT, TEMPORARY, PARTTIME
+  appointmentDate      DateTime          @default(now())
+  expiryDate           DateTime?
+  generatedIdNumber    String?           @unique
+  appointmentLetterUrl String
+  photoUrl             String
+  signatureUrl         String
+  status               String            @default("SUBMITTED") // SUBMITTED, MEDIA_APPROVED, APPROVED, PRINTED, ISSUED, REJECTED_MEDIA, REJECTED_HR
+  dictsComments        String?
+  hrComments           String?
+  notes                ApplicationNote[]
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+}
+
+model ApplicationNote {
+  id            String           @id @default(uuid())
+  applicationId String
+  application   StaffApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  senderName    String
+  senderRole    String
+  message       String
+  createdAt     DateTime         @default(now())
+}
+
+model GlobalChat {
+  id         String   @id @default(uuid())
+  senderName String
+  senderRole String
+  message    String
+  createdAt  DateTime @default(now())
+}
+
+model SystemBranding {
+  id                    String   @id @default(uuid())
+  secretarySignatureUrl String?  // University Secretary signature image URL
+  returnAddress         String?  // Return address shown on card back
+  idCardTemplateUrl     String?  // SVG/PDF template file URL for card design
+  templateMode          String   @default("builtin") // builtin, template, ai-scan
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
