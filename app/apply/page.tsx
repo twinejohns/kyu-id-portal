@@ -63,10 +63,22 @@ export default function ApplyPage() {
   } | null>(null);
 
   useEffect(() => {
-    fetch('/api/data').then(r => r.json()).then(data => {
-      setDepartments(data);
-      setLoading(false);
-    });
+    fetch('/api/data')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setDepartments(data);
+        } else {
+          console.error("Error: Expected departments array but received:", data);
+          setDepartments([]);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to load departments:", err);
+        setDepartments([]);
+        setLoading(false);
+      });
   }, []);
 
   const uploadBlob = async (blob: Blob, fileName: string) => {
